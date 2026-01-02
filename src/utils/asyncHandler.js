@@ -1,18 +1,7 @@
-// const asyncHandler = (fn)=>async(req,res,next)=>{
-//         try{
-//              await fn(req,res,next);
-//         }catch(error){
-//               res.status(500).json({
-//                 success:false,
-//                 message:err.message,
-//               })
-//         }
-// }
-const asyncHandler = (requestHandler)=>{
-    return (req,res,next)=>{
-        promise.resolve(requestHandler(req,res,next)).catch(
-            (err)=>next(err)
-        );
-    }
-}
-export default {asyncHandler};
+// Lightweight async handler: wraps an async request handler and forwards
+// errors to Express `next()` so the global error middleware can handle them.
+export const asyncHandler = (requestHandler) => {
+  return (req, res, next) => {
+    Promise.resolve(requestHandler(req, res, next)).catch(next);
+  };
+};

@@ -1,6 +1,6 @@
-import mongoose, {Schema} from 'mongoose';
-import {jwt} from 'jsonwebtoken'
-import bycryt from 'bcrypt'
+import mongoose, { Schema } from "mongoose";
+import jwt from "jsonwebtoken";
+import bycryt from "bcrypt";
 
 const userSchema = new Schema(
   {
@@ -51,4 +51,4 @@ const userSchema = new Schema(
   }
 );
 
-export const User = mongoose.model("User",userSchema);
+export const User = mongoose.model("User", userSchema);
