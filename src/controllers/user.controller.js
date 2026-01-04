@@ -5,6 +5,16 @@ import jwt from "jsonwebtoken";
 import ApiError from "../utils/apiError.js";
 import ApiResponse from "../utils/apiResponse.js";
 
+const generateAccessTokenAndRefreshToken = async(userId)=>{
+    try{
+        const user = await user.findById(userId);
+        const accessToken = user.generateAccessToken();
+        const refreshToken = user.generateRefreshToken();
+        user.refreshToken = refreshToken
+    }catch{
+
+    }
+}
 const registerUser = asyncHandler(async (req, res) => {
   const { fullName, email, username, password } = req.body;
   if (
@@ -59,5 +69,27 @@ const registerUser = asyncHandler(async (req, res) => {
     .status(201)
     .json(new ApiResponse(200, createdUser, "User registered Successfully"));
 });
+
+const loginUser = asyncHandler(async(req,res)=>{
+    const {username,password,email} = req.body;
+     const user =await User.findOne(
+        {$or: [{username}, {email}]}
+     );
+    if(!username && !email){
+ throw new ApiError(400, "username or email is required")
+    }
+    if(!user){
+        throw new ApiError("404","User does not exist");
+    }
+    const isPasswordCorrect = User.isPasswordCorrect(password);
+    if(!isPasswordCorrect){
+        throw new ApiError("401","Invalid User Credentials")
+    }
+    const {accessToken ,refreshToken} = generateAccessTokenAndRefreshToken();
+    return res
+    .status('200')
+    .json()
+    .message("user loggedin succesfully")
+})
 
 export default registerUser;
