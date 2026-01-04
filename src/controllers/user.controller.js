@@ -4,14 +4,18 @@ import uploadCloudinary from "../utils/cloudinary.js";
 import jwt from "jsonwebtoken";
 import ApiError from "../utils/apiError.js";
 import ApiResponse from "../utils/apiResponse.js";
+import mongoose from "mongoose";
 
 const generateAccessTokenAndRefreshToken = async(userId)=>{
     try{
-        const user = await user.findById(userId);
+        const user = await User.findById(userId);
         const accessToken = user.generateAccessToken();
         const refreshToken = user.generateRefreshToken();
         user.refreshToken = refreshToken
-    }catch{
+        await user.save();
+        return {accessToken,refreshToken}
+    }catch(error){
+        throw new ApiError(500,error?.message || "Something went wrong while generating access token and refresh token");
 
     }
 }
@@ -28,7 +32,7 @@ const registerUser = asyncHandler(async (req, res) => {
   if (existedUser) {
     throw new ApiError(409, "User with this email or username already exists");
   }
-  console.log(req.files);
+//   console.log(req.files);
   const avatarLocalPath = req.files?.avatar[0]?.path;
   if (!avatarLocalPath) {
     throw new ApiError(400, "Avatar file is required");
@@ -85,11 +89,36 @@ const loginUser = asyncHandler(async(req,res)=>{
     if(!isPasswordCorrect){
         throw new ApiError("401","Invalid User Credentials")
     }
-    const {accessToken ,refreshToken} = generateAccessTokenAndRefreshToken();
+    const {accessToken ,refreshToken} = generateAccessTokenAndRefreshToken(user._id);
+    const loggedInUser  = await User.findById(user._id).select("-password -refreshToken")
+    const options = {
+        httpOnly:true,
+        secure:true
+    }
     return res
     .status('200')
-    .json()
+    .cookie("ac")
     .message("user loggedin succesfully")
 })
+const logOutUser = asyncHandler(async(req,res)=>{
+       await User.findByIdAndUpdate(req.user._id,{
+        $unset:{
+          refreshToken :1,
+        },
+      },
+        {
+          new :true
+        }
+       )
+       const options = {
+        httpOnly:true,
+        secure:true
+       }
+       return res
+         .status(200)
+         .clearCookie("accessToken", options)
+         .clearCookie("refreshToken", options)
+         .json(new ApiResponse(200, {}, "User logged Out"));
+})
 
-export default registerUser;
+export  {registerUser};

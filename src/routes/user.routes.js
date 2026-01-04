@@ -16,4 +16,5 @@ router.route('/register').post(
 
     ]),
 )
-router.route('/login').post('')
+router.route('/login').post('loginUser');
+router.route('logout').post(veriftJWT,logoutUser);
